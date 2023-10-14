@@ -4,4 +4,17 @@
 
 .grabbing-icon {
 	cursor: grabbing !important;
+	cursor: -webkit-grabbing !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
+	-moz-user-select: none !important;
+	-ms-user-select: none !important;
+	overflow-anchor: none !important;
+}
+.s-kan-container {
+	contain: size style;
+}
+.s-kan-item-wrapper {
+	box-sizing: border-box;
+	contain: style;
 }

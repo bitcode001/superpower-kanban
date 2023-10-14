@@ -1,48 +1,96 @@
 import { KanbanBoardKeys } from '@/App';
-import { DragEventHandler } from 'react';
+// import { DragEventHandler } from 'react';
 
 let item_getting_dragged: HTMLElement | null;
 let hoverOnRef: Element | null;
-
-export const handleDragStart: DragEventHandler<HTMLDivElement> = (
-	e: React.DragEvent<HTMLDivElement>
-) => {
-	e.stopPropagation();
-	// console.log('Drag start: ', e.target);
-
-	// item_getting_dragged = document.elementFromPoint(e.pageX, e.pageY);
-	item_getting_dragged = e.target as HTMLElement;
-
-	e.currentTarget.classList.add('grabbing-icon');
-
-	for (let i = 0; i < e.currentTarget.children.length; i++) {
-		e.currentTarget.children[i].classList.add('transition-all');
-	}
+type CordType = {
+	x: number;
+	y: number;
 };
+let initCord: CordType = { x: 0, y: 0 };
 
-export const handleDragOver: DragEventHandler<HTMLDivElement> = (
-	e: React.DragEvent<HTMLDivElement>
-) => {
-	e.stopPropagation();
-	e.preventDefault();
-};
-
-export const handleDrop: DragEventHandler<HTMLDivElement> = (
-	e: React.DragEvent<HTMLDivElement>
-) => {
-	e.stopPropagation();
-	e.preventDefault();
-	console.log('Dropped : ', e.target);
-};
-
-export const handleTempCardDrag: (e: React.DragEvent<HTMLDivElement>) => void = (e) => {
-	e.stopPropagation();
-	e.preventDefault();
+export const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+	// e.stopPropagation();
+	// e.preventDefault();
+	console.log('Drag start: ', e.target);
 	const delegatedEl = e.target as HTMLElement;
 	if (delegatedEl.classList.contains('opacity-100')) {
 		delegatedEl.classList.remove('opacity-100');
 		delegatedEl.classList.add('opacity-0');
+		delegatedEl.classList.add('grabbing-icon');
 	}
+	// document.body.classList.add('grabbing-icon');
+
+	// Initial coord
+	initCord = {
+		x: e.pageX,
+		y: e.pageY
+	};
+	// e.dataTransfer.effectAllowed = 'all';
+	// e.dataTransfer.
+
+	// document.body.classList.add('grabbing-icon');
+	// delegatedEl.classList.add('grabbing-icon');
+
+	// Clone the node and set it for custom overlay
+	const clonnedNode = (e.target as HTMLElement).cloneNode(true);
+	// position: fixed; top: 302px; left: 65px; box-sizing: border-box; width: 260px; height: 84.7969px; transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1) 0s; z-index: 5000; pointer-events: none; transform: translate(35px, 24px);
+	(clonnedNode as HTMLElement).setAttribute(
+		'style',
+		`position: fixed; top: ${(e.target as HTMLElement).getBoundingClientRect().top}px; left: ${
+			(e.target as HTMLElement).getBoundingClientRect().left
+		}px; box-sizing: border-box; background-color: red; opacity: 1; width: ${
+			(e.target as HTMLElement).getBoundingClientRect().width
+		}px; height: max-content; transition: cubic-bezier(0.2, 0, 0, 1) 0.1s; z-index: 5000; pointer-events: none;`
+	);
+	(clonnedNode as HTMLElement).classList.add('s-kanban-ghost-child');
+	(clonnedNode as HTMLElement).classList.add('grabbing-icon');
+	document.querySelector('.s-kanban-ghost')?.appendChild(clonnedNode);
+
+	// item_getting_dragged = document.elementFromPoint(e.pageX, e.pageY);
+	item_getting_dragged = e.target as HTMLElement;
+
+	let totalItemHeight: number = 0;
+	for (let i = 0; i < e.currentTarget.children.length; i++) {
+		totalItemHeight += Number(e.currentTarget.children[i].getBoundingClientRect().height);
+	}
+	console.log('Possible cont height: ', totalItemHeight);
+	// e.currentTarget.setAttribute('style', `min-height: ${totalItemHeight}px`);
+};
+
+// export const handleDragOver: DragEventHandler<HTMLDivElement> = (
+// 	e: React.DragEvent<HTMLDivElement>
+// ) => {
+// 	// e.stopPropagation();
+// 	// e.preventDefault();
+// };
+
+export const handleTempCardDrag: (e: React.DragEvent<HTMLDivElement>) => void = (e) => {
+	// e.stopPropagation();
+	// e.preventDefault();
+
+	// Add trailing element
+	const trail = document.querySelector('.s-kanban-ghost-child');
+	if (trail) {
+		// trail.animate(
+		// 	{
+		// 		left: `${e.pageX - trail.getBoundingClientRect().height / 2}px`,
+		// 		top: `${e.pageY - trail.getBoundingClientRect().width / 2}px`
+		// 	},
+		// 	{ duration: 0, fill: 'forwards' }
+		// );
+		if (e.pageX == 0 && e.pageY == 0) {
+			// console.log('X: ' + (e.pageX - initCord.x) + ' Y: ' + (e.pageY - initCord.y));
+			// console.log('initX: ' + initCord.x + ' initY: ' + initCord.y);
+			(trail as HTMLElement).style.transform = `translate(0, 0) scale(1)`;
+		} else {
+			(trail as HTMLElement).style.transform = `translate(${e.pageX - initCord.x}px, ${
+				e.pageY - initCord.y
+			}px) scale(1.01) rotate(2deg)`;
+		}
+	}
+
+	e.dataTransfer.effectAllowed = 'move';
 
 	// Get items from the current mouse position
 	const hoverOnItem = document.elementFromPoint(e.pageX, e.pageY);
@@ -129,27 +177,41 @@ export const handleTempCardDragEnd: (
 	e: React.DragEvent<HTMLDivElement>,
 	cb: (cont: KanbanBoardKeys, a: string, b: string) => void
 ) => void = (e, cb) => {
-	e.stopPropagation();
+	// e.stopPropagation();
+	// e.preventDefault();
+
 	const delegatedEl = e.target as HTMLElement;
 	if (delegatedEl.classList.contains('opacity-0')) {
 		delegatedEl.classList.remove('opacity-0');
 		delegatedEl.classList.add('opacity-100');
+		delegatedEl.classList.remove('grabbing-icon');
 	}
+	// document.body.classList.remove('grabbing-icon');
+	// delegatedEl.classList.add('grabbing-icon');
+	console.log('Drag ended!');
 
 	// Get the container
 	const container = e.currentTarget;
 	const container_key = (container.getAttribute('data-sk-cont') as KanbanBoardKeys) ?? 'backlog';
 
 	// Remove transition
-	for (let i = 0; i < e.currentTarget.children.length; i++) {
-		e.currentTarget.children[i].classList.remove('transition-all');
-		container.children[i].removeAttribute('style');
-	}
+	// for (let i = 0; i < e.currentTarget.children.length; i++) {
+	// 	e.currentTarget.children[i].classList.remove('transition-all');
+	// 	container.children[i].removeAttribute('style');
+	// }
 
 	// Removing grabbed icon
-	if (item_getting_dragged) item_getting_dragged.classList.add('cursor-pointer');
+	// if (item_getting_dragged) item_getting_dragged.classList.add('cursor-pointer');
+	// document.querySelector('.s-kanban-ghost')?.appendChild(clonnedNode);
 
-	document.body.classList.remove('grabbing-icon');
+	(() => {
+		const container = document.querySelector('.s-kanban-ghost');
+		while (container?.firstChild) {
+			container.removeChild(container.firstChild);
+		}
+	})();
+	// initCord = originalPos = resetPos;
+	// document.body.classList.toggle('grabbing-icon');
 
 	if (hoverOnRef) {
 		// console.log('THROW: ', hoverOnRef);
@@ -164,23 +226,14 @@ export const handleTempCardDragEnd: (
 	item_getting_dragged = null;
 };
 
-export const handleCardDragOver: DragEventHandler<HTMLDivElement> = (
-	e: React.DragEvent<HTMLDivElement>
-) => {
-	// To prevent event bubbling
-	e.stopPropagation();
-	// To Allow to be dropped
-	e.preventDefault();
-	console.log('Drag over: ', e.target);
-};
+// export const handleMouseDown = (e: React.MouseEvent) => {
+// 	console.log('Mouse Down: ', e);
+// };
 
-// NEW TEST
-export const handleOnDrag = (e: React.DragEvent) => {
-	e.stopPropagation();
-	// console.log('e.target: ', e.target);
-};
+// export const handleMouseUp = (e: React.MouseEvent) => {
+// 	console.log('Mouse Up: ', e);
+// };
 
-export const handleOnDragStart = (e: React.DragEvent) => {
-	e.stopPropagation();
-	console.log('e.target: ', e.target);
-};
+// export const handleMouseMove = (e: React.MouseEvent) => {
+// console.log('Mouse Move: ', e);
+// };
