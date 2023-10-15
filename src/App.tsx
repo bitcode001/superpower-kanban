@@ -138,18 +138,13 @@ function App() {
 	// 	y: 0
 	// });
 	const handleMouseMove = (e: MouseEvent) => {
-		// console.log('e: ', e);
-		// const delegatedEl = e.target as HTMLElement;
+		// Simple pseudocode
+		// step 1 - first grab the index of clicked (selected/grabbed) valid DOM
+		// step 2 - style all the siblings below the selected index to shift by the height of selected dom (on first hover)
+		// step 3 - if hovered outside of the parent wrapper then reset all the style of siblings (delete style attribute)
+		// step 4 - now if hovered item have 'style' property then purge it / if not add style to all the elements from hovered till the end. DOT
 
-		// Add transition if possible
-		// if (draggableSiblings) {
-		// 	draggableSiblings.forEach((el) => {
-		// 		if (!el.classList.contains('transition-all')) {
-		// 			el.classList.add('transition-all');
-		// 		}
-		// 	});
-		// }
-
+		// Step 1
 		// Update dragging dom
 		if (draggingDOM) {
 			// console.log('Setting values: ', draggingDOM.getBoundingClientRect());
@@ -163,7 +158,8 @@ function App() {
 			);
 		}
 
-		// Shift all siblings
+		// Step 2
+		// Shift all siblings except the one grabbing and above
 		if (draggableSiblings && firstDrag) {
 			const myIndex = draggingDOM.getAttribute('data-rbd-draggable-index');
 			draggableSiblings.forEach((el, idx) => {
@@ -171,7 +167,7 @@ function App() {
 					el.setAttribute(
 						'style',
 						`transform: translate(0px, ${
-							draggingDOM.getBoundingClientRect().height + 8
+							draggingDOM.getBoundingClientRect().height
 						}px); transition: none 0s ease 0s;`
 					);
 				}
@@ -184,6 +180,18 @@ function App() {
 		if (currentHover) {
 			const flag = currentHover.getAttribute('data-moveable');
 
+			// Step 3: If I am not hovering on the container; I reset the style of all sibings
+			if (
+				!(currentHover.parentNode as HTMLElement).getAttribute('id')?.includes('sibling-wrapper') &&
+				!currentHover.getAttribute('id')?.includes('sibling-wrapper')
+			) {
+				draggableSiblings.forEach((el) => {
+					if (el !== draggingDOM) {
+						el.removeAttribute('style');
+					}
+				});
+			}
+
 			// If I am hovering over right item
 			if (flag) {
 				/// Revoke style if swapped
@@ -193,25 +201,18 @@ function App() {
 				) {
 					// If my cursor is at arond middle of the hovering valid div dimension then I swap
 					const hoverAttr = currentHover.getAttribute('data-rbd-draggable-index');
-					const myAttr = draggingDOM.getAttribute('data-rbd-draggable-index');
+					// const myAttr = draggingDOM.getAttribute('data-rbd-draggable-index');
 
-					if (Number(myAttr) < Number(hoverAttr)) {
-						// Remove style
-						draggableSiblings.slice(Number(myAttr) + 1, Number(hoverAttr) + 1).map((el) =>
-							// !el.getAttribute('style') &&
-							el.removeAttribute('style')
-						);
-					}
-
-					if (Number(myAttr) > Number(hoverAttr)) {
-						// Add style
-						draggableSiblings.slice(Number(hoverAttr), Number(myAttr)).map((el) =>
-							// !el.getAttribute('style') &&
+					// Step 4: If the hovered item have style; purge it; else; style the hovered dom and all its immediate sibling to slide down
+					if (currentHover.getAttribute('style')) {
+						currentHover.removeAttribute('style');
+					} else {
+						draggableSiblings.slice(Number(hoverAttr)).forEach((el) => {
 							el.setAttribute(
 								'style',
-								`transform: translate(0px, ${draggingDOM.getBoundingClientRect().height + 8}px);`
-							)
-						);
+								`transform: translate(0px, ${draggingDOM.getBoundingClientRect().height}px);`
+							);
+						});
 					}
 				}
 			}
@@ -294,7 +295,7 @@ function App() {
 				(acc, cv) => (acc += cv.getBoundingClientRect().height),
 				0
 			);
-			(el as HTMLElement).style.minHeight = `${totalMinHeight + childrens.length * 8}px`;
+			(el as HTMLElement).style.minHeight = `${totalMinHeight}px`;
 		});
 
 		return () => {
@@ -346,20 +347,23 @@ function App() {
 										data-moveable="true"
 										data-testid={item.testId}
 										aria-label={item.ariaLabel}
-										className="min-h-10 mb-2 flex cursor-grab select-none rounded-sm border-2 border-transparent bg-white p-2"
+										className="moving-card min-h-10 flex cursor-grab select-none flex-col rounded-sm border-2 border-transparent bg-transparent"
 									>
-										<img
-											src="https://picsum.photos/200/200"
-											alt={item.imgAlt}
-											className="mr-4 h-10 w-10 rounded-full"
-										/>
-										<div className="css-j30nls e1i6b1k83">
-											<div className="css-8x6dak e1i6b1k84">{item.quote}</div>
-											<div className="css-8lh52t e1i6b1k85">
-												<small className="css-r1rhy5 e1i6b1k86">{item.character}</small>
-												<small className="css-h5d6eo e1i6b1k87">id:{item.id}</small>
+										<div className="h-full w-full bg-white p-2">
+											<img
+												src="https://picsum.photos/200/200"
+												alt={item.imgAlt}
+												className="mr-4 h-10 w-10 rounded-full"
+											/>
+											<div className="css-j30nls e1i6b1k83">
+												<div className="css-8x6dak e1i6b1k84">{item.quote}</div>
+												<div className="css-8lh52t e1i6b1k85">
+													<small className="css-r1rhy5 e1i6b1k86">{item.character}</small>
+													<small className="css-h5d6eo e1i6b1k87">id:{item.id}</small>
+												</div>
 											</div>
 										</div>
+										<div className="h-2"></div>
 									</a>
 								))}
 							</div>

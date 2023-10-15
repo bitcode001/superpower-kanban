@@ -18,3 +18,25 @@
 	box-sizing: border-box;
 	contain: style;
 }
+
+.moving-card {
+	touch-action: manipulation;
+}
+.moving-card > * {
+	pointer-events: none;
+}
+[data-rbd-draggable-context-id='0'] {
+	transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+/* [data-rbd-drag-handle-context-id='0'] {
+	pointer-events: none;
+} */
+/* body {
+	cursor: grabbing;
+	cursor: -webkit-grabbing;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	overflow-anchor: none;
+} */
